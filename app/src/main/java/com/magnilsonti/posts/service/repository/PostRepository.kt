@@ -8,7 +8,7 @@ import com.magnilsonti.posts.service.model.Post
 import java.util.*
 
 class PostRepository private constructor(context: Context) {
-    private val db = PostDataBaseHelper(context).writableDatabase
+    private var mPostDataBaseHelper: PostDataBaseHelper = PostDataBaseHelper(context)
 
     companion object {
         private lateinit var repository: PostRepository
@@ -22,7 +22,9 @@ class PostRepository private constructor(context: Context) {
 
     fun get(id: Int): Post? {
         var post: Post? = null
+
         return try {
+            val db = mPostDataBaseHelper.readableDatabase
             val projection = arrayOf(
                 POST.COLUMNS.TITLE,
                 POST.COLUMNS.BODY
@@ -38,9 +40,11 @@ class PostRepository private constructor(context: Context) {
                 null,
                 null
             )?.use { cursor ->
-                val title = cursor.getString(cursor.getColumnIndex(POST.COLUMNS.TITLE))
-                val body = cursor.getString(cursor.getColumnIndex(POST.COLUMNS.BODY))
-                post = Post(id, title, body)
+                while (cursor.moveToNext()) {
+                    val title = cursor.getString(cursor.getColumnIndex(POST.COLUMNS.TITLE))
+                    val body = cursor.getString(cursor.getColumnIndex(POST.COLUMNS.BODY))
+                    post = Post(id, title, body)
+                }
             }
             post
         } catch (e: Exception) {
@@ -51,6 +55,7 @@ class PostRepository private constructor(context: Context) {
     fun getAll(): List<Post> {
         val list: MutableList<Post> = ArrayList()
         return try {
+            val db = mPostDataBaseHelper.readableDatabase
             val projection = arrayOf(
                 POST.COLUMNS.ID,
                 POST.COLUMNS.TITLE,
@@ -80,6 +85,7 @@ class PostRepository private constructor(context: Context) {
 
     fun save(post: Post): Boolean {
         return try {
+            val db = mPostDataBaseHelper.readableDatabase
             val contentValues = ContentValues()
             contentValues.put(POST.COLUMNS.TITLE, post.title)
             contentValues.put(POST.COLUMNS.BODY, post.body)
@@ -92,6 +98,7 @@ class PostRepository private constructor(context: Context) {
 
     fun update(post: Post): Boolean {
         return try {
+            val db = mPostDataBaseHelper.readableDatabase
             val contentValues = ContentValues()
             contentValues.put(POST.COLUMNS.TITLE, post.title)
             contentValues.put(POST.COLUMNS.BODY, post.body)
@@ -106,6 +113,7 @@ class PostRepository private constructor(context: Context) {
 
     fun delete(id: Int): Boolean {
         return try {
+            val db = mPostDataBaseHelper.readableDatabase
             val selection = AND_ID
             val args = arrayOf(id.toString())
             db.delete(POST.TABLE_NAME, selection, args)

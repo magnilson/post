@@ -19,12 +19,10 @@ class PostFormViewModel(application: Application) : AndroidViewModel(application
     val post: LiveData<Post> = mPost
 
     fun save(id: Int, title: String, body: String) {
-        val post = Post(id, title, body)
-
         if (id == 0) {
-            mSavePost.value = mPostRepository.save(post)
+            mSavePost.value = mPostRepository.save(Post(id, title, body))
         } else {
-            mSavePost.value = mPostRepository.update(post)
+            mSavePost.value = mPostRepository.update(Post(id, title, body))
         }
     }
 
